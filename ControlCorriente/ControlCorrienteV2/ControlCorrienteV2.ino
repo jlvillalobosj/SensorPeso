@@ -28,9 +28,10 @@ PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
 
 // Temporizador
 unsigned long milisTime;
-int hours = 0, minutes = 0, seconds = 0;
-int interval = 1000;
 unsigned long  previousMillis = 0;
+int hours = 0, minutes = 0, seconds = 0;
+int interval = 1000, intervalSeconds = 1;
+int previousSeconds = 0;
 
 
 void setup() {
@@ -50,18 +51,32 @@ void setup() {
 
 void loop() {
 
+  contador();
+
   mode = digitalRead(buttonPin); 
 
-  // Lectura de tensión
-  int sensorVoltageValue = analogRead(voltagePin);         // Leer el valor analógico (0-1023)
-  inputVoltage = (sensorVoltageValue * 5.0) / 1024.0;           // Convertir a voltaje (0-5V)
-  voltage = inputVoltage * 2;                       // Multiplicar por 2 para obtener el voltaje real (0-10V)
+  if (seconds - previousSeconds >= intervalSeconds) {
+
+    previousSeconds = seconds;
+
+    // Lectura de tensión
+    int sensorVoltageValue = analogRead(voltagePin);         // Leer el valor analógico (0-1023)
+    inputVoltage = (sensorVoltageValue * 5.0) / 1024.0;           // Convertir a voltaje (0-5V)
+    voltage = abs((inputVoltage * 2) - 0.1);                       // Multiplicar por 2 para obtener el voltaje real (0-10V)
 
 
-  // Lecture de corriente
-  int sensorCurrentValue = analogRead(analogPinSensorCurrent);
-  voltageSensor = (sensorCurrentValue * 5.0) / 1024.0;  // Convertir a voltaje
-  current = (voltageSensor - 2.5) / 0.066;       // 0.066V por A para ACS712 30A
+    // Lecture de corriente
+    int sensorCurrentValue = analogRead(analogPinSensorCurrent);
+    voltageSensor = (sensorCurrentValue * 5.0) / 1024.0;  // Convertir a voltaje
+    current = abs((voltageSensor - 2.54) / 0.066);       // 0.066V por A para ACS712 30A
+  
+  // Enviar datos al Serial Plotter
+  Serial.print("Voltage: ");
+  Serial.print(voltage);
+  Serial.print(" Current: ");
+  Serial.println(current);
+
+  }
 
   if (mode == LOW) {
     
@@ -108,6 +123,7 @@ void contador() {
     // Si los segundos llegan a 60, resetear y sumar 1 minuto
     if (seconds >= 60) {
       seconds = 0;
+      previousSeconds = 0;
       minutes++;
     }
 
@@ -128,12 +144,11 @@ void contador() {
 void readLCD(float voltage, float current){
 
     // Muestra los resultados en la pantalla LCD
-    lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("V: ");
+    lcd.print("V:");
     lcd.print(voltage);
     lcd.print("V  ");
-    lcd.print("I: ");
+    lcd.print("I:");
     lcd.print(current);
     lcd.print("A");
 
