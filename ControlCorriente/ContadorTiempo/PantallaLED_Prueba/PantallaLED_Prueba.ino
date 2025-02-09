@@ -8,7 +8,7 @@ int interval = 1000;
 unsigned long  previousMillis = 0;
 
 //Declarar LCD y pines
-LiquidCrystal lcd(2,3,4,5,6,7);
+LiquidCrystal lcd(7,6,5,4,3,2);
 void setup() {
  //Definir las dimensiones del LCD (16x2)
  lcd.begin(16,2);
